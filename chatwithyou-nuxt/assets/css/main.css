@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 自定义样式 */
+.chat-bubble {
+  @apply max-w-xs lg:max-w-md px-4 py-2 rounded-lg;
+}
+
+.chat-bubble-user {
+  @apply bg-blue-500 text-white ml-auto;
+}
+
+.chat-bubble-ai {
+  @apply bg-gray-200 text-gray-900 mr-auto;
+}
+
+.character-card {
+  @apply bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer;
+}
+
+.character-card:hover {
+  @apply scale-105;
+}
+
+/* 滚动条样式 */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(156 163 175) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgb(156 163 175);
+  border-radius: 20px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(107 114 128);
+}

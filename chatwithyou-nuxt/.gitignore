@@ -1,0 +1,142 @@
+# ====================
+# Dependencies
+# ====================
+node_modules/
+
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ====================
+# Nuxt.js Build Output
+# ====================
+.nuxt/
+.output/
+.nitro/
+dist/
+.vercel/
+.netlify/
+
+# ====================
+# Environment Variables
+# ====================
+.env
+.env.local
+.env.*.local
+.env.production
+
+# ====================
+# Logs
+# ====================
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ====================
+# Editor and IDE
+# ====================
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# ====================
+# Operating System
+# ====================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ====================
+# Database
+# ====================
+# Prisma
+prisma/migrations/
+prisma/dev.db
+*.db
+*.sqlite
+
+# MongoDB dumps
+dump/
+
+# ====================
+# Testing
+# ====================
+coverage/
+.coverage
+.nyc_output/
+.jest/
+
+# ====================
+# Cache and Temporary Files
+# ====================
+.cache/
+.temp/
+.tmp/
+*.tmp
+*.temp
+.next/
+.nuxtjs/
+.vite/
+.turbo/
+
+# ====================
+# Build Tools
+# ====================
+.webpack/
+.rollup.cache/
+.parcel-cache/
+.esbuild/
+
+# ====================
+# Package Manager Lock Files (keep only one)
+# ====================
+# Uncomment the one you're NOT using:
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml (keeping this since we're using pnpm)
+
+# ====================
+# Deployment
+# ====================
+.vercel
+.netlify
+
+# ====================
+# TypeScript
+# ====================
+*.tsbuildinfo
+
+# ====================
+# ESLint and Prettier
+# ====================
+.eslintcache
+
+# ====================
+# Storybook
+# ====================
+storybook-static/
+
+# ====================
+# Local Development
+# ====================
+.local/
+.history/

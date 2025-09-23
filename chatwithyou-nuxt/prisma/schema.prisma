@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mongodb"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id            String         @id @default(auto()) @map("_id") @db.ObjectId
+    email         String         @unique
+    name          String
+    avatar        String?
+    password      String
+    conversations Conversation[]
+    createdAt     DateTime       @default(now())
+    updatedAt     DateTime       @updatedAt
+
+    @@map("users")
+}
+
+model Character {
+    id            String            @id @default(auto()) @map("_id") @db.ObjectId
+    name          String
+    avatar        String?
+    background    String
+    personality   String[]
+    speakingStyle String
+    quotes        String[]
+    category      CharacterCategory
+    isActive      Boolean           @default(true)
+    conversations Conversation[]
+    createdAt     DateTime          @default(now())
+    updatedAt     DateTime          @updatedAt
+
+    @@map("characters")
+}
+
+model Conversation {
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId      String    @db.ObjectId
+    character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+    characterId String    @db.ObjectId
+    messages    Message[]
+    title       String?
+    lastMessage String?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    @@map("conversations")
+}
+
+model Message {
+    id             String       @id @default(auto()) @map("_id") @db.ObjectId
+    conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+    conversationId String       @db.ObjectId
+    type           MessageType
+    content        String
+    timestamp      DateTime     @default(now())
+
+    @@map("messages")
+}
+
+enum CharacterCategory {
+    HISTORICAL
+    FICTIONAL
+    CELEBRITY
+    CUSTOM
+}
+
+enum MessageType {
+    USER
+    AI
+}
