@@ -53,25 +53,44 @@ export default defineEventHandler(
       const systemPrompt = buildSystemPrompt(character);
       const messageHistory = buildMessageHistory(conversation.messages);
 
-      // 调用OpenAI API
       const runtimeConfig = useRuntimeConfig();
-      const openai = new OpenAI({
-        apiKey: runtimeConfig.openaiApiKey,
-      });
+      let aiResponse = "抱歉，我现在无法回应。";
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messageHistory,
-          { role: "user", content: message },
-        ],
-        temperature: 0.7,
-        max_tokens: 500,
-      });
+      try {
+        // 优先尝试七牛云AI
+        aiResponse = await callQiniuAI(
+          systemPrompt,
+          messageHistory,
+          message,
+          runtimeConfig
+        );
+      } catch (qiniuError) {
+        console.warn("七牛云AI调用失败，尝试OpenAI:", qiniuError);
 
-      const aiResponse =
-        completion.choices[0]?.message?.content || "抱歉，我现在无法回应。";
+        // 如果七牛云失败，尝试OpenAI作为备用
+        try {
+          const openai = new OpenAI({
+            apiKey: runtimeConfig.openaiApiKey,
+          });
+
+          const completion = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [
+              { role: "system", content: systemPrompt },
+              ...messageHistory,
+              { role: "user", content: message },
+            ],
+            temperature: 0.7,
+            max_tokens: 500,
+          });
+
+          aiResponse =
+            completion.choices[0]?.message?.content || "抱歉，我现在无法回应。";
+        } catch (openaiError) {
+          console.error("OpenAI调用也失败了:", openaiError);
+          throw new Error("AI服务暂时不可用");
+        }
+      }
 
       // 保存AI消息
       const aiMessage = await prisma.message.create({
@@ -98,11 +117,11 @@ export default defineEventHandler(
           aiMessage: aiMessage as Message,
         },
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("AI chat API error:", error);
 
       // 如果是OpenAI API错误，返回更友好的错误信息
-      if (error.code === "insufficient_quota") {
+      if (error?.code === "insufficient_quota") {
         throw createError({
           statusCode: 503,
           statusMessage: "AI服务暂时不可用，请稍后再试",
@@ -143,4 +162,44 @@ function buildMessageHistory(
       role: msg.type === "USER" ? ("user" as const) : ("assistant" as const),
       content: msg.content,
     }));
+}
+
+// 调用七牛云AI
+async function callQiniuAI(
+  systemPrompt: string,
+  messageHistory: Array<{ role: "user" | "assistant"; content: string }>,
+  message: string,
+  config: any
+): Promise<string> {
+  const baseUrl = config.qiniuBaseUrl || config.qiniuBackupUrl;
+
+  if (!baseUrl || !config.qiniuApiKey) {
+    throw new Error("七牛云AI配置不完整");
+  }
+
+  const response = (await $fetch(`${baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${config.qiniuApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: {
+      model: config.qiniuModelId || "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...messageHistory,
+        { role: "user", content: message },
+      ],
+      temperature: 0.7,
+      max_tokens: 500,
+      stream: false,
+    },
+    timeout: 30000, // 30秒超时
+  })) as any;
+
+  if (response?.choices?.[0]?.message?.content) {
+    return response.choices[0].message.content;
+  }
+
+  throw new Error("七牛云AI返回格式异常");
 }

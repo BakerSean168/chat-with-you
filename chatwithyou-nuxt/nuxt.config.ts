@@ -8,7 +8,7 @@ export default defineNuxtConfig({
   css: ["~/assets/css/main.css"],
 
   // 模块配置
-  modules: ["@nuxt/ui", "@pinia/nuxt", "@vueuse/nuxt", "@sidebase/nuxt-auth"],
+  modules: ["@nuxt/ui", "@pinia/nuxt", "@vueuse/nuxt"],
 
   // TypeScript配置
   typescript: {
@@ -23,6 +23,11 @@ export default defineNuxtConfig({
     databaseUrl: process.env.DATABASE_URL,
     jwtSecret: process.env.JWT_SECRET,
     authSecret: process.env.NUXT_AUTH_SECRET,
+    // 七牛云AI配置
+    qiniuApiKey: process.env.QI_NIU_YUN_API_KEY,
+    qiniuBaseUrl: process.env.QI_NIU_YUN_BASE_URL,
+    qiniuBackupUrl: process.env.QI_NIU_YUN_BASE_URL_BACKUP,
+    qiniuModelId: process.env.QI_NIU_YUN_MODEL_ID,
 
     // 公共配置 (暴露给客户端)
     public: {
@@ -33,6 +38,12 @@ export default defineNuxtConfig({
 
   // 页面配置
   pages: true,
+
+  // 开发服务器配置
+  devServer: {
+    port: 4000,
+    host: '127.0.0.1'
+  },
 
   // Nitro服务端配置
   nitro: {

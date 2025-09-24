@@ -11,7 +11,7 @@ interface RateLimitConfig {
 // 默认配置
 const defaultConfig: RateLimitConfig = {
   windowMs: 15 * 60 * 1000, // 15分钟
-  maxRequests: 100, // 100次请求
+  maxRequests: 1000, // 1000次请求 (增加限制，避免开发时触发)
   message: "Too many requests, please try again later.",
 };
 
@@ -20,6 +20,12 @@ export const rateLimit = (config: Partial<RateLimitConfig> = {}) => {
   const finalConfig = { ...defaultConfig, ...config };
 
   return defineEventHandler(async (event) => {
+    // 跳过测试路径的限流
+    const url = event.node.req.url || "";
+    if (url.includes("/api/test/")) {
+      return; // 不对测试 API 应用限流
+    }
+
     // 获取客户端IP
     const clientIp = getClientIP(event) || "unknown";
     const now = Date.now();
@@ -73,5 +79,8 @@ setInterval(() => {
   }
 }, 60 * 1000); // 每分钟清理一次
 
-// 默认导出基础限流中间件
-export default rateLimit();
+// 全局限流中间件已禁用 - 仅在需要时手动应用特定的限流
+export default defineEventHandler(async (event) => {
+  // 不做任何限流处理，直接放行
+  return;
+});
