@@ -4,28 +4,32 @@
     <header class="bg-white shadow-sm border-b px-4 py-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <button 
-            @click="$router.back()"
-            class="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
+          <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold">
+            <div
+              class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold">
               {{ character?.name?.charAt(0) || '?' }}
             </div>
             <div>
-              <h1 class="font-semibold text-gray-900">{{ character?.name || '加载中...' }}</h1>
-              <p class="text-sm text-gray-500">{{ character?.background || '' }}</p>
+              <h1 class="font-semibold text-gray-900">
+                {{ character?.name || '加载中...' }}
+              </h1>
+              <p class="text-sm text-gray-500">
+                <span v-if="character?.background">{{ character.background }}</span>
+                <span v-else-if="!error" class="animate-pulse bg-gray-200 h-3 w-20 rounded inline-block"></span>
+              </p>
             </div>
           </div>
         </div>
         <div class="flex items-center space-x-2">
-          <button class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <button @click="clearConversation" class="p-2 hover:bg-gray-100 rounded-full transition-colors" title="清空对话">
             <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </button>
         </div>
@@ -34,9 +38,30 @@
 
     <!-- 消息区域 -->
     <div class="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-thin">
+      <!-- 错误提示 -->
+      <div v-if="error" class="mb-4 p-4 bg-red-50 border-l-4 border-red-400 rounded-md">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-red-700">{{ error }}</p>
+            <button @click="retryLastMessage"
+              class="mt-2 text-sm bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded transition-colors">
+              重试
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- 欢迎消息 -->
-      <div v-if="messages.length === 0" class="text-center py-8">
-        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">
+      <div v-if="messages.length === 0 && !error" class="text-center py-8">
+        <div
+          class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">
           {{ character?.name?.charAt(0) || '?' }}
         </div>
         <h3 class="text-lg font-semibold text-gray-900 mb-2">
@@ -48,20 +73,14 @@
       </div>
 
       <!-- 消息列表 -->
-      <div 
-        v-for="message in messages"
-        :key="message.id"
-        :class="[
-          'flex',
-          message.type === 'user' ? 'justify-end' : 'justify-start'
-        ]"
-      >
-        <div 
-          :class="[
-            'chat-bubble',
-            message.type === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'
-          ]"
-        >
+      <div v-for="message in messages" :key="message.id" :class="[
+        'flex',
+        message.type === 'user' ? 'justify-end' : 'justify-start'
+      ]">
+        <div :class="[
+          'chat-bubble',
+          message.type === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'
+        ]">
           <p class="text-sm">{{ message.content }}</p>
           <p class="text-xs opacity-70 mt-1">
             {{ formatTime(message.timestamp) }}
@@ -83,28 +102,41 @@
 
     <!-- 输入区域 -->
     <div class="bg-white border-t px-4 py-3">
+      <!-- 网络状态提示 -->
+      <div v-if="!isOnline" class="mb-3 p-2 bg-orange-50 border-l-4 border-orange-400 rounded text-sm">
+        <div class="flex items-center">
+          <svg class="w-4 h-4 text-orange-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+              clip-rule="evenodd" />
+          </svg>
+          <span class="text-orange-700">网络连接不可用，请检查网络连接后重试</span>
+        </div>
+      </div>
+
       <div class="flex items-end space-x-3">
         <div class="flex-1">
-          <textarea
-            v-model="inputMessage"
-            @keydown.enter.prevent="sendMessage"
-            placeholder="输入您的消息..."
-            rows="1"
+          <textarea v-model="inputMessage" @keydown.enter.prevent="handleEnterKey" placeholder="输入您的消息..." rows="1"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            :disabled="isLoading"
-          />
+            :disabled="isLoading || !isOnline" />
         </div>
-        <button
-          @click="sendMessage"
-          :disabled="!inputMessage.trim() || isLoading"
+        <button @click="sendMessage" :disabled="!inputMessage.trim() || isLoading || !isOnline"
           class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
+          :title="!isOnline ? '网络不可用' : isLoading ? '正在发送...' : '发送消息'">
           <svg v-if="isLoading" class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
+          </svg>
+          <svg v-else-if="!isOnline" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+              d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z"
+              clip-rule="evenodd" />
           </svg>
           <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
           </svg>
         </button>
       </div>
@@ -123,60 +155,98 @@ const isLoading = ref(false)
 const isTyping = ref(false)
 const messages = ref<any[]>([])
 const character = ref<any>(null)
+const conversationId = ref<string | null>(null)
+const error = ref<string | null>(null)
+const retryCount = ref(0)
+const maxRetries = 3
+const isOnline = ref(true)
 
 // 页面配置
 definePageMeta({
   title: '对话中...'
 })
 
-// 获取角色信息
-const getCharacter = (id: string) => {
-  const characters = [
-    {
-      id: 'luxun',
-      name: '鲁迅',
-      background: '中国现代文学奠基人，思想家，革命家',
-      personality: '犀利、深刻、讽刺、忧国忧民',
-      speaking_style: '文言白话结合，善用比喻和讽刺'
-    },
-    {
-      id: 'confucius',
-      name: '孔子',
-      background: '春秋时期思想家、教育家',
-      personality: '温和、睿智、循循善诱',
-      speaking_style: '言简意赅，富含哲理'
-    },
-    {
-      id: 'einstein',
-      name: '爱因斯坦',
-      background: '理论物理学家',
-      personality: '好奇、幽默、富有想象力',
-      speaking_style: '深入浅出，善用比喻'
-    },
-    {
-      id: 'sherlock',
-      name: '夏洛克·福尔摩斯',
-      background: '世界知名侦探',
-      personality: '敏锐、理性、自信',
-      speaking_style: '逻辑严密，语言精确'
+// 加载角色信息
+const loadCharacter = async () => {
+  try {
+    const response = await $fetch(`/api/characters/${characterId}`)
+    if (response.success && response.data) {
+      character.value = response.data
+    } else {
+      throw new Error('Character not found')
     }
-  ]
-  
-  return characters.find(char => char.id === id)
+  } catch (fetchError: any) {
+    console.error('加载角色失败:', fetchError)
+
+    if (fetchError.statusCode === 404) {
+      error.value = '角色不存在，正在返回首页...'
+      setTimeout(() => navigateTo('/'), 2000)
+    } else {
+      error.value = '加载角色信息失败，请刷新页面重试。'
+    }
+  }
 }
 
-// 初始化
-onMounted(() => {
-  character.value = getCharacter(characterId)
-  if (!character.value) {
-    // 角色不存在，跳转回首页
-    navigateTo('/')
+// 创建或获取对话
+const createConversation = async () => {
+  try {
+    const response = await $fetch('/api/conversations', {
+      method: 'POST',
+      body: {
+        characterId: characterId,
+        userId: 'user-1' // 暂时使用固定用户ID
+      },
+      timeout: 10000 // 10秒超时
+    })
+
+    if (response.success && response.data) {
+      conversationId.value = response.data.id
+    }
+  } catch (fetchError: any) {
+    console.error('创建对话失败:', fetchError)
+
+    // 如果对话创建失败，生成临时ID但显示警告
+    conversationId.value = 'temp-' + Date.now()
+
+    if (!error.value) { // 只在没有其他错误时显示对话创建错误
+      error.value = '对话创建失败，消息可能无法保存。请刷新页面重试。'
+    }
   }
+}
+
+// 清空对话
+const clearConversation = async () => {
+  // 清空本地消息并创建新对话
+  messages.value = []
+  await createConversation()
+}
+
+// 监听网络状态
+const handleOnline = () => (isOnline.value = true)
+const handleOffline = () => (isOnline.value = false)
+
+// 初始化
+onMounted(async () => {
+  // 监听网络状态变化
+  window.addEventListener('online', handleOnline)
+  window.addEventListener('offline', handleOffline)
+  isOnline.value = navigator.onLine
+
+  await loadCharacter()
+  await createConversation()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('online', handleOnline)
+  window.removeEventListener('offline', handleOffline)
 })
 
 // 发送消息
-const sendMessage = async () => {
+const sendMessage = async (retrying = false) => {
   if (!inputMessage.value.trim() || isLoading.value) return
+
+  // 清除之前的错误
+  error.value = null
 
   const userMessage = {
     id: Date.now(),
@@ -185,67 +255,88 @@ const sendMessage = async () => {
     timestamp: new Date()
   }
 
-  // 添加用户消息
-  messages.value.push(userMessage)
-  const messageContent = inputMessage.value.trim()
-  inputMessage.value = ''
-  
+  // 只在非重试时添加用户消息
+  if (!retrying) {
+    messages.value.push(userMessage)
+    lastUserMessage.value = inputMessage.value.trim()
+  }
+
+  const messageContent = retrying ? lastUserMessage.value : inputMessage.value.trim()
+  if (!retrying) {
+    inputMessage.value = ''
+  }
+
   // 显示正在输入
   isLoading.value = true
   isTyping.value = true
 
   try {
-    // 模拟API调用（后续替换为真实API）
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // 模拟AI回复
-    const aiResponse = generateMockResponse(messageContent, character.value)
-    
-    const aiMessage = {
-      id: Date.now() + 1,
-      type: 'ai',
-      content: aiResponse,
-      timestamp: new Date()
+    // 调用真实的 AI 接口
+    const response = await $fetch('/api/ai/chat', {
+      method: 'POST',
+      body: {
+        characterId: characterId,
+        conversationId: conversationId.value,
+        message: messageContent
+      },
+      timeout: 30000 // 30秒超时
+    })
+
+    if (response.data?.aiMessage?.content) {
+      const aiMessage = {
+        id: Date.now() + 1,
+        type: 'ai',
+        content: response.data.aiMessage.content,
+        timestamp: new Date()
+      }
+      messages.value.push(aiMessage)
+      retryCount.value = 0 // 重置重试计数
+    } else {
+      throw new Error('Invalid response format')
     }
-    
-    messages.value.push(aiMessage)
-  } catch (error) {
-    console.error('发送消息失败:', error)
-    // 错误处理
+  } catch (fetchError: any) {
+    console.error('发送消息失败:', fetchError)
+
+    // 根据错误类型显示不同的错误信息
+    let errorMessage = '抱歉，发生了未知错误，请重试。'
+
+    if (fetchError.statusCode === 503) {
+      errorMessage = 'AI服务暂时不可用，请稍后再试。'
+    } else if (fetchError.statusCode === 429) {
+      errorMessage = '请求过于频繁，请稍后再试。'
+    } else if (fetchError.name === 'TimeoutError' || fetchError.message?.includes('timeout')) {
+      errorMessage = '请求超时，请检查网络连接后重试。'
+    } else if (fetchError.statusCode >= 500) {
+      errorMessage = '服务器错误，请稍后再试。'
+    } else if (!navigator.onLine) {
+      errorMessage = '网络连接不可用，请检查网络连接。'
+    }
+
+    error.value = errorMessage
+    retryCount.value++
   } finally {
     isLoading.value = false
     isTyping.value = false
   }
 }
 
-// 模拟AI回复生成
-const generateMockResponse = (message: string, char: any) => {
-  const responses = {
-    'luxun': [
-      '这正如我在《呐喊》中所写，国民的精神何时才能觉醒？',
-      '世间本无路，走的人多了，也便成了路。',
-      '我以为人类的进步，就是要向着真理前进的。'
-    ],
-    'confucius': [
-      '学而时习之，不亦说乎？',
-      '知之为知之，不知为不知，是知也。',
-      '君子坦荡荡，小人长戚戚。'
-    ],
-    'einstein': [
-      '想象力比知识更重要，因为知识是有限的。',
-      '真理就是在经验面前站得住脚的东西。',
-      '我从不想未来，它来得太快。'
-    ],
-    'sherlock': [
-      '当你排除了所有不可能的情况，剩下的无论多么难以置信，都必然是真相。',
-      '细节是最重要的，往往真相就隐藏在其中。',
-      '观察！这是我的方法。'
-    ]
+// 重试最后一条消息
+const lastUserMessage = ref('')
+const retryLastMessage = async () => {
+  if (retryCount.value < maxRetries && lastUserMessage.value) {
+    await sendMessage(true)
   }
-  
-  const charResponses = responses[char?.id as keyof typeof responses] || ['抱歉，我需要思考一下。']
-  return charResponses[Math.floor(Math.random() * charResponses.length)]
 }
+
+// 处理回车键
+const handleEnterKey = (event: KeyboardEvent) => {
+  if (!event.shiftKey && isOnline.value && !isLoading.value) {
+    event.preventDefault()
+    sendMessage()
+  }
+}
+
+
 
 // 格式化时间
 const formatTime = (date: Date) => {

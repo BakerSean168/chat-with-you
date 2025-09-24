@@ -166,6 +166,47 @@ export interface ApiError {
   details?: any;
 }
 
+// 聊天相关API响应
+export interface ChatSendResponse {
+  userMessage: {
+    id: string;
+    content: string;
+    type: MessageType;
+    timestamp: Date;
+  };
+  aiMessage: {
+    id: string;
+    content: string;
+    type: MessageType;
+    timestamp: Date;
+  };
+  character: {
+    name: string;
+    avatar?: string;
+  };
+}
+
+export interface ConversationResponse {
+  conversation: {
+    id: string;
+    title?: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  character: Character;
+  messages: Message[];
+}
+
+export interface CreateConversationResponse {
+  conversation: {
+    id: string;
+    title?: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  character: Character;
+}
+
 // 分页查询参数
 export interface PaginationParams {
   page?: number;
