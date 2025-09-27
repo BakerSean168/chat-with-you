@@ -163,8 +163,12 @@ const isOnline = ref(true)
 
 // 页面配置
 definePageMeta({
-  title: '对话中...'
+  title: '对话中...',
+  middleware: 'auth'
 })
+
+// 认证状态
+const authStore = useAuthStore()
 
 // 加载角色信息
 const loadCharacter = async () => {
@@ -192,15 +196,17 @@ const createConversation = async () => {
   try {
     const response = await $fetch('/api/conversations', {
       method: 'POST',
+      headers: authStore.token ? {
+        Authorization: `Bearer ${authStore.token}`,
+      } : {},
       body: {
-        characterId: characterId,
-        userId: 'user-1' // 暂时使用固定用户ID
+        characterId: characterId
       },
       timeout: 10000 // 10秒超时
     })
 
-    if (response.success && response.data) {
-      conversationId.value = response.data.id
+    if ((response as any)?.success && (response as any)?.data) {
+      conversationId.value = (response as any).data.id
     }
   } catch (fetchError: any) {
     console.error('创建对话失败:', fetchError)
@@ -274,6 +280,9 @@ const sendMessage = async (retrying = false) => {
     // 调用真实的 AI 接口
     const response = await $fetch('/api/ai/chat', {
       method: 'POST',
+      headers: authStore.token ? {
+        Authorization: `Bearer ${authStore.token}`,
+      } : {},
       body: {
         characterId: characterId,
         conversationId: conversationId.value,
@@ -282,11 +291,11 @@ const sendMessage = async (retrying = false) => {
       timeout: 30000 // 30秒超时
     })
 
-    if (response.data?.aiMessage?.content) {
+    if ((response as any)?.data?.aiMessage?.content) {
       const aiMessage = {
         id: Date.now() + 1,
         type: 'ai',
-        content: response.data.aiMessage.content,
+        content: (response as any).data.aiMessage.content,
         timestamp: new Date()
       }
       messages.value.push(aiMessage)

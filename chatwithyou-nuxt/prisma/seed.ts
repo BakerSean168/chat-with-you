@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log("开始播种数据...");
+  console.log("数据库连接字符串:", process.env.DATABASE_URL);
 
   // 创建示例用户
   const hashedPassword = await bcrypt.hash("123456", 10);

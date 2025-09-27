@@ -17,6 +17,16 @@
             <NuxtLink to="/history" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
               历史记录
             </NuxtLink>
+            <!-- 用户信息 -->
+            <div v-if="authStore.user" class="flex items-center space-x-3">
+              <span class="text-sm text-gray-600">
+                欢迎，{{ authStore.user.name }}
+              </span>
+              <button @click="authStore.logout()"
+                class="text-sm text-red-600 hover:text-red-800 px-3 py-1 rounded border border-red-300 hover:border-red-400">
+                退出
+              </button>
+            </div>
           </nav>
         </div>
       </div>
@@ -112,8 +122,12 @@
 <script setup lang="ts">
 // 页面配置
 definePageMeta({
-  title: 'ChatWithYou - 选择对话角色'
+  title: 'ChatWithYou - 选择对话角色',
+  middleware: 'auth'
 })
+
+// 认证状态管理
+const authStore = useAuthStore()
 
 // 响应式数据
 const selectedCategory = ref('all')
@@ -121,10 +135,10 @@ const selectedCategory = ref('all')
 // 角色分类
 const categories = [
   { id: 'all', name: '全部' },
-  { id: 'historical', name: '历史人物' },
-  { id: 'fictional', name: '虚构角色' },
-  { id: 'celebrity', name: '现代名人' },
-  { id: 'custom', name: '自定义' }
+  { id: 'HISTORICAL', name: '历史人物' },
+  { id: 'FICTIONAL', name: '虚构角色' },
+  { id: 'CELEBRITY', name: '现代名人' },
+  { id: 'CUSTOM', name: '自定义' }
 ]
 
 // 从API获取角色数据
@@ -153,8 +167,15 @@ const getCategoryCount = (categoryId: string) => {
 }
 
 // 方法：开始对话
-const startConversation = (character: any) => {
-  navigateTo(`/chat/${character.id}`)
+const startConversation = async (character: any) => {
+  console.log('Starting conversation with:', character.name, character.id)
+  try {
+    await navigateTo(`/chat/${character.id}`)
+  } catch (error) {
+    console.error('Navigation error:', error)
+    // 如果导航失败，尝试使用location.href
+    window.location.href = `/chat/${character.id}`
+  }
 }
 </script>
 

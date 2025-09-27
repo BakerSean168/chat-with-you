@@ -138,7 +138,7 @@ const filteredCharacters = computed(() => {
 
 // 角色选择处理
 const onCharacterSelect = (character: Character) => {
-  $emit('select', character)
+  emit('select', character)
 }
 
 // 监听分类变化，重置搜索

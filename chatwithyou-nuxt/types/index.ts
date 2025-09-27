@@ -63,6 +63,37 @@ export interface LoginRequest {
 export interface LoginResponse {
   user: User;
   token: string;
+  refreshToken?: string;
+}
+
+// 认证相关类型
+export interface AuthState {
+  user: User | null;
+  token: string | null;
+  refreshToken: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+}
+
+export interface RegisterRequest {
+  email: string;
+  name: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  token: string;
+  refreshToken?: string;
+}
+
+export interface JWTPayload {
+  userId: string;
+  email: string;
+  name: string;
+  iat?: number;
+  exp?: number;
 }
 
 // 消息相关类型

@@ -31,7 +31,7 @@ export default defineEventHandler(
     } catch (error) {
       console.error("Character detail API error:", error);
 
-      if (error.statusCode) {
+      if ((error as { statusCode?: number }).statusCode) {
         throw error;
       }
 

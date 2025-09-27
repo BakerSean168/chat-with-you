@@ -42,7 +42,7 @@ export default defineNuxtConfig({
   // 开发服务器配置
   devServer: {
     port: 4000,
-    host: '127.0.0.1'
+    host: "127.0.0.1",
   },
 
   // Nitro服务端配置

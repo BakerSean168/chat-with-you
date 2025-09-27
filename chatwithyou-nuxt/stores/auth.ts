@@ -140,7 +140,11 @@ export const useAuthStore = defineStore("auth", () => {
     }
 
     try {
-      const response = await $fetch<ApiResponse<User>>("/api/auth/me");
+      const response = await $fetch<ApiResponse<User>>("/api/auth/me", {
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+        },
+      });
 
       if (response.success && response.data) {
         user.value = response.data;
@@ -166,6 +170,16 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
+  // 获取认证headers
+  const getAuthHeaders = (): Record<string, string> => {
+    if (!token.value) {
+      return {};
+    }
+    return {
+      Authorization: `Bearer ${token.value}`,
+    };
+  };
+
   return {
     // 状态
     user: readonly(user),
@@ -182,5 +196,6 @@ export const useAuthStore = defineStore("auth", () => {
     clearAuth,
     checkAuth,
     updateUser,
+    getAuthHeaders,
   };
 });

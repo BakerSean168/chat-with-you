@@ -1,72 +1,67 @@
 import { prisma } from "~/lib/prisma";
-import type { ApiResponse, PaginatedResponse, Character } from "~/types";
-import { CharacterQuerySchema } from "~/schemas";
 
-export default defineEventHandler(
-  async (event): Promise<PaginatedResponse<Character>> => {
-    try {
-      const query = getQuery(event);
+export default defineEventHandler(async (event) => {
+  try {
+    console.log("Characters API called");
 
-      // 验证查询参数
-      const validatedQuery = CharacterQuerySchema.parse({
-        page: query.page ? Number(query.page) : 1,
-        limit: query.limit ? Number(query.limit) : 10,
-        category: query.category as string,
-        search: query.search as string,
-        isActive: query.isActive ? query.isActive === "true" : undefined,
-      });
+    const query = getQuery(event);
+    const { category, search, isActive } = query;
 
-      const { page, limit, category, search, isActive } = validatedQuery;
+    // 构建查询条件
+    const where: any = {};
 
-      // 构建查询条件
-      const where: any = {};
-
-      if (category) {
-        where.category = category;
-      }
-
-      if (search) {
-        where.OR = [
-          { name: { contains: search, mode: "insensitive" } },
-          { background: { contains: search, mode: "insensitive" } },
-          { personality: { hasSome: [search] } },
-        ];
-      }
-
-      if (isActive !== undefined) {
-        where.isActive = isActive;
-      }
-
-      // 获取总数和数据
-      const [total, characters] = await Promise.all([
-        prisma.character.count({ where }),
-        prisma.character.findMany({
-          where,
-          skip: (page - 1) * limit,
-          take: limit,
-          orderBy: { updatedAt: "desc" },
-        }),
-      ]);
-
-      const totalPages = Math.ceil(total / limit);
-
-      return {
-        success: true,
-        data: characters as Character[],
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-        },
-      };
-    } catch (error) {
-      console.error("Characters API error:", error);
-
-      throw createError({
-        statusCode: 500,
-        statusMessage: "Failed to fetch characters",
-      });
+    // 默认只显示激活的角色，除非明确指定 isActive=false
+    if (isActive === "false") {
+      where.isActive = false;
+    } else {
+      where.isActive = true;
     }
+
+    if (category && category !== "all") {
+      where.category = category;
+      console.log("Filtering by category:", category);
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search as string, mode: "insensitive" } },
+        { background: { contains: search as string, mode: "insensitive" } },
+      ];
+    }
+
+    console.log("Query conditions:", where);
+
+    // 获取角色列表
+    const characters = await prisma.character.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        avatar: true,
+        background: true,
+        personality: true,
+        speakingStyle: true,
+        quotes: true,
+        category: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: [{ isActive: "desc" }, { name: "asc" }],
+    });
+
+    console.log(`Found ${characters.length} characters`);
+
+    return {
+      success: true,
+      data: characters,
+    };
+  } catch (error: any) {
+    console.error("Get characters error:", error);
+
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Internal server error while fetching characters",
+    });
   }
-);
+});
