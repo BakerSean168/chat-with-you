@@ -2,11 +2,10 @@ import type {
   Message,
   Conversation,
   Character,
-  MessageType,
-  MessageStatus,
   CreateMessageRequest,
   ApiResponse,
 } from "~/types";
+import { MessageType, MessageStatus } from "~/types";
 
 export const useChat = () => {
   // 响应式状态
