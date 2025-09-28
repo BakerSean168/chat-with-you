@@ -177,29 +177,73 @@ async function callQiniuAI(
     throw new Error("七牛云AI配置不完整");
   }
 
-  const response = (await $fetch(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${config.qiniuApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: {
-      model: config.qiniuModelId || "nvidia/llama-3.3-nemotron-super-49b-v1.5",
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...messageHistory,
-        { role: "user", content: message },
-      ],
-      temperature: 0.7,
-      max_tokens: 500,
-      stream: false,
-    },
-    timeout: 30000, // 30秒超时
-  })) as any;
+  // 构建消息数组
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...messageHistory,
+    { role: "user", content: message },
+  ];
 
-  if (response?.choices?.[0]?.message?.content) {
-    return response.choices[0].message.content;
+  // 根据您测试成功的API格式构建请求体，保持简单
+  const requestBody = {
+    messages: messages,
+    model: config.qiniuModelId || "deepseek-v3", // 使用您测试成功的模型
+    stream: false, // 不使用流式响应
+  };
+
+  try {
+    console.log("七牛云AI请求:", {
+      url: `${baseUrl}/chat/completions`,
+      model: requestBody.model,
+      messageCount: messages.length,
+    });
+
+    const response = (await $fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.qiniuApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: requestBody,
+      timeout: 30000, // 30秒超时
+    })) as any;
+
+    console.log("七牛云AI响应:", response);
+
+    // 检查响应格式
+    if (response?.choices?.[0]?.message?.content) {
+      const content = response.choices[0].message.content;
+      console.log("七牛云AI返回内容长度:", content.length);
+      return content;
+    }
+
+    // 检查是否有错误信息
+    if (response?.error) {
+      throw new Error(
+        `七牛云AI API错误: ${
+          response.error.message || JSON.stringify(response.error)
+        }`
+      );
+    }
+
+    throw new Error("七牛云AI返回格式异常: " + JSON.stringify(response));
+  } catch (error: any) {
+    console.error("七牛云AI调用错误:", error);
+
+    // 详细错误日志
+    if (error.data) {
+      console.error("错误详情:", error.data);
+    }
+
+    // 处理不同类型的错误
+    if (error.status === 401 || error.statusCode === 401) {
+      throw new Error("七牛云AI API密钥无效");
+    } else if (error.status === 429 || error.statusCode === 429) {
+      throw new Error("七牛云AI API调用频率超限");
+    } else if ((error.status || error.statusCode) >= 500) {
+      throw new Error("七牛云AI服务器错误");
+    }
+
+    throw error;
   }
-
-  throw new Error("七牛云AI返回格式异常");
 }
